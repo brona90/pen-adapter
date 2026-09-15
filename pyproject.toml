@@ -1,0 +1,18 @@
+[project]
+name = "pen-adapter"
+version = "0.1.0"
+description = "Parametric thread adapter: Asvine vacuum-filler section -> TWSBI Vac 20A bottle neck (build123d)"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "bd-warehouse>=0.3.0",
+    "build123d>=0.11.1",
+    "matplotlib>=3.11.2",
+    "numpy>=2.5.3",
+    "trimesh>=5.1.0",
+]
+
+[tool.uv]
+# The Nix-profile python (3.14, nix glibc) cannot dlopen Debian's libstdc++,
+# which the manylinux cadquery-ocp wheel needs. Always use a uv-managed
+# python-build-standalone interpreter, never whatever is on PATH.
+python-preference = "only-managed"
