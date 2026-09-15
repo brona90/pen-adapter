@@ -94,7 +94,7 @@ MESH_ANGULAR_TOL    = 0.1         # STL angular deflection (rad)
 
 from build123d import (  # noqa: E402
     Align, Axis, Cylinder, ExportSVG, Keep, LineType, Plane, Polygon, Pos,
-    RegularPolygon, export_stl, extrude, revolve, section, split,
+    RegularPolygon, export_step, export_stl, extrude, revolve, section, split,
 )
 from bd_warehouse.thread import IsoThread, TrapezoidalThread  # noqa: E402
 
@@ -450,6 +450,9 @@ def main(argv=None) -> None:
         export_stl(part, str(stl), tolerance=MESH_TOLERANCE, angular_tolerance=MESH_ANGULAR_TOL)
         verify_stl(stl, name, vol)
         print(f"  wrote {stl}")
+        step = args.out / f"{name}.step"          # exact B-rep for CAD programs, not a mesh
+        export_step(part, str(step))
+        print(f"  wrote {step}")
         if not args.no_section:
             for p in export_section(part, name, args.out):
                 print(f"  wrote {p}")

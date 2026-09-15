@@ -65,7 +65,8 @@ For each part it writes to `out/` (git-ignored, regenerable):
 
 | file | what |
 |---|---|
-| `<part>.stl` | the printable solid |
+| `<part>.stl` | the printable solid (mesh) — slicers, 3D Viewer, MeshLab |
+| `<part>.step` | the exact B-rep — FreeCAD, Fusion 360, Onshape, SolidWorks; edit, measure, section it there |
 | `<part>-half.stl` | the solid cut on the XZ plane — load next to the full STL to look inside |
 | `<part>-section.png` | filled cross-section on the XZ plane; the **internal thread** is the saw-tooth on the inside of the tube wall between the top face and the relief |
 | `<part>-half.svg` | line drawing of the half part, visible + hidden edges |
