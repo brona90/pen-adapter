@@ -85,6 +85,35 @@ names the parameter to change.
   groove, flat base. Screw the pen into it. Tests the pen thread fit and whether
   the top groove lands under the section shoulder.
 
+## Viewing the model
+
+**FreeCAD 1.1.3** (Windows, `winget install FreeCAD.FreeCAD`, at
+`%LOCALAPPDATA%\Programs\FreeCAD 1.1\bin\freecad.exe`): File → Open
+`\\wsl.localhost\Debian\home\gfoster\keep\pen-adapter\out\adapter.step`. Part
+workbench → *Cross-sections* (or View → Clipping plane) shows the internal
+thread. The STEP round-trips as one valid solid at the same volume.
+
+**VS Code + OCP CAD Viewer** (live, from the script): open the folder in the
+WSL remote (`code --remote wsl+Debian /home/gfoster/keep/pen-adapter`). The
+`bernhard-42.ocp-cad-viewer` extension autostarts its panel when
+`pen_adapter.py` is opened (it contains the `from ocp_vscode import` trigger)
+and runs its backend on this project's `.venv` (`.vscode/settings.json`). Then,
+in the VS Code terminal:
+
+```sh
+uv run pen_adapter.py adapter --no-section --show
+```
+
+`--show` pushes the built part into the panel; the panel's *Clip* tab gives a
+live section plane. If the panel is not open the script says so instead of
+pretending (`ocp_vscode.show` itself only warns). The `ocp_vscode` Python
+package is pinned to the extension's major version (4.0.x); when the extension
+updates, `uv add "ocp_vscode==<new>.*"`.
+
+Extensions installed on both the Windows host and the WSL server:
+`ms-vscode-remote.remote-wsl`, `ms-python.python`, `bernhard-42.ocp-cad-viewer`
+(also listed in `.vscode/extensions.json`).
+
 ## Measurements you need to take
 
 Vernier/digital calipers only, no pitch gauge. Zero the calipers first, use light

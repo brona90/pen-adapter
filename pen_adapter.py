@@ -435,6 +435,8 @@ def main(argv=None) -> None:
     ap.add_argument("--clearance", type=float, default=RADIAL_CLEARANCE,
                     help="override RADIAL_CLEARANCE (mm per side)")
     ap.add_argument("--no-section", action="store_true", help="skip the section-view exports")
+    ap.add_argument("--show", action="store_true",
+                    help="also push each part into the OCP CAD Viewer (VS Code, viewer must be open)")
     args = ap.parse_args(argv)
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -456,6 +458,23 @@ def main(argv=None) -> None:
         if not args.no_section:
             for p in export_section(part, name, args.out):
                 print(f"  wrote {p}")
+        if args.show:
+            show_in_vscode(part, name)
+
+
+def show_in_vscode(part, name: str) -> None:
+    """Send the part to the OCP CAD Viewer panel. Run from the VS Code terminal with the
+    viewer open (Ctrl+Shift+P -> 'OCP CAD Viewer: Open viewer'); it finds the port via
+    the .ocp_vscode file the extension writes into the workspace."""
+    from ocp_vscode import show
+    from ocp_vscode.comms import get_port, port_check
+    port = get_port()                            # str from the extension's config file
+    if port is None or not port_check(int(port)):  # show() would only warn; say it plainly
+        print(f"  OCP CAD Viewer not reachable (port {port}); open the viewer in VS Code "
+              f"and rerun with --show", file=sys.stderr)
+        return
+    show(part, names=[name], reset_camera=True)
+    print(f"  shown in OCP CAD Viewer as {name!r} on port {port}")
 
 
 if __name__ == "__main__":
