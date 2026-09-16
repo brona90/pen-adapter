@@ -26,6 +26,24 @@ The numbers there are plausible enough for the model to build and be checked;
 they are not measurements. Measure first (below), then print the two gauges,
 then the part.
 
+## Pipeline
+
+Every push to `main` runs `.github/workflows/build.yml`:
+
+```
+pen_adapter.py all ──▶ manifold gate ──▶ out/ (STL, STEP, sections, report.json)
+                                              │
+guide/build.py ◀── template.html + figures.py ┘
+        │
+        ▼
+      site/ ──▶ GitHub Pages   https://brona90.github.io/pen-adapter/
+```
+
+The page is generated, never hand-edited: the hero drawing is the model's own section,
+the fit checks use the script's constants, the title block carries the git revision and
+how many `MEASURE_ME` tags remain, and the downloads table lists only files that passed
+the gate. The parts are also attached to each run as an artifact. See `guide/README.md`.
+
 ## Reproducing the build
 
 Environment recorded in `pyproject.toml`, `uv.lock`, `.python-version`:

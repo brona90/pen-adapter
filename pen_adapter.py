@@ -24,6 +24,7 @@ Every export is followed by a manifold check of the STL that was actually writte
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import sys
 from dataclasses import dataclass
@@ -350,7 +351,7 @@ def verify_brep(part, name: str) -> float:
     return vol
 
 
-def verify_stl(path: Path, name: str, brep_volume: float) -> None:
+def verify_stl(path: Path, name: str, brep_volume: float) -> dict:
     import trimesh
     # STL carries no vertex sharing (3 fresh vertices per triangle), so coincident
     # vertices must be merged before edge adjacency means anything - exactly what a
@@ -373,6 +374,8 @@ def verify_stl(path: Path, name: str, brep_volume: float) -> None:
         sys.exit(f"{name}: STL FAILED manifold check: " + "; ".join(bad))
     print(f"  STL:  watertight, consistent winding, Euler {m.euler_number}, "
           f"{len(m.faces)} triangles, volume {m.volume:.1f} mm^3")
+    return {"triangles": len(m.faces), "mesh_volume": round(m.volume, 1), "euler": int(m.euler_number)}
+    return {"triangles": len(m.faces), "mesh_volume": round(m.volume, 1), "euler": int(m.euler_number)}
 
 
 # ----------------------------------------------------------------------------
@@ -444,22 +447,32 @@ def main(argv=None) -> None:
     report(L)
 
     names = list(PARTS) if args.part == "all" else [args.part]
+    report_path = args.out / "report.json"
+    results = json.loads(report_path.read_text()) if report_path.exists() else {}
     for name in names:
         print(f"\n== {name}")
         part = PARTS[name](L)
         vol = verify_brep(part, name)
         stl = args.out / f"{name}.stl"
         export_stl(part, str(stl), tolerance=MESH_TOLERANCE, angular_tolerance=MESH_ANGULAR_TOL)
-        verify_stl(stl, name, vol)
+        stats = verify_stl(stl, name, vol)
         print(f"  wrote {stl}")
         step = args.out / f"{name}.step"          # exact B-rep for CAD programs, not a mesh
         export_step(part, str(step))
         print(f"  wrote {step}")
+        files = [stl.name, step.name]
         if not args.no_section:
             for p in export_section(part, name, args.out):
                 print(f"  wrote {p}")
+                files.append(p.name)
+        results[name] = {"brep_volume": round(vol, 1), "faces": len(part.faces()), **stats,
+                         "clearance": args.clearance, "files": files}
         if args.show:
             show_in_vscode(part, name)
+    # machine-readable record of what passed the gate; guide/build.py reads it
+    results["_meta"] = {"clearance": args.clearance, "measure_me_left": Path(__file__).read_text().count("# MEASURE" "_ME")}
+    report_path.write_text(json.dumps(results, indent=2))
+    print(f"\nwrote {report_path}")
 
 
 def show_in_vscode(part, name: str) -> None:

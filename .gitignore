@@ -1,5 +1,6 @@
 .venv/
 out/
+site/
 __pycache__/
 *.pyc
 .ocp_vscode

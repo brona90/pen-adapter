@@ -1,0 +1,60 @@
+name: build
+
+# model -> manifold gate -> STL/STEP/section exports -> bench-guide site -> GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: OpenCASCADE runtime libraries (the manylinux OCP wheel dlopens libGL)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgl1 libglu1-mesa libxrender1 libxext6 libsm6 libice6 libxi6 libxfixes3
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install the pinned interpreter and locked dependencies
+        run: uv sync --frozen
+
+      - name: Model — build every part, gate it, export STL/STEP/sections
+        run: uv run pen_adapter.py all
+
+      - name: Guide — section outline, figures, template -> site/
+        run: uv run guide/build.py
+
+      - name: Keep the parts as a run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parts-${{ github.sha }}
+          path: out/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

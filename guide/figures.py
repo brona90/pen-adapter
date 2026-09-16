@@ -1,4 +1,4 @@
-"""Generate the 16 step figures for the bench guide and splice them into the HTML (replacing any present)."""
+"""The 16 step figures of the bench guide, hand-drawn as inline SVG. `F` maps step id -> <figure>."""
 import re, math
 
 PART = 'style="fill:var(--accent-soft);stroke:currentColor;stroke-width:1.2;stroke-linejoin:round"'
@@ -291,22 +291,3 @@ body += f'<text x="{x0+86}" y="{y0+12}" {TXTM}>hex + tube</text>'
 body += f'<text x="{x0+86}" y="{y0+50}" {TXTM}>rim → ink</text>'
 body += f'<text x="{x0+86}" y="{y0+96}" {TXTR}>≥ 3 below</text>'
 F["B8"] = fig("b8", 400, 160, body, "Left: shoulder to nib tip. Right: the adapter lifts the pen by hex plus tube, so the nib must still reach past the rim-to-ink distance by a few millimetres.")
-
-# ---------- splice ----------
-src = "/mnt/c/Users/brona/AppData/Local/Temp/claude/C--Users-brona/398b5ca9-5191-4149-bc9e-4505bb14e5d3/scratchpad/bench-guide.html"
-html = open(src, encoding="utf-8").read()
-html = re.sub(r'<figure class="fig">.*?</figure>\n\s*', '', html, flags=re.S)
-css = ('.fig{margin:0 0 14px;max-width:540px}'
-       '.fig svg{display:block;width:100%;height:auto;background:var(--surface);border:1px solid var(--rule-soft);color:var(--ink)}'
-       '.fig figcaption{font-size:.82rem;color:var(--muted);margin-top:6px;line-height:1.4}\n')
-if ".fig{" not in html:
-    html = html.replace("/* checks */", css + "/* checks */", 1)
-n = 0
-for sid, figure in F.items():
-    m = re.search(rf'<div class="id">{sid}<small>', html)
-    assert m, sid
-    k = html.index('<div class="bench">', m.end())
-    html = html[:k] + figure + "\n      " + html[k:]
-    n += 1
-open(src, "w", encoding="utf-8", newline="\n").write(html)
-print("inserted", n, "figures;", len(html), "bytes; figures in file:", html.count('class="fig"'))
